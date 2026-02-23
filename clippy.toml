@@ -1,0 +1,4 @@
+
+# The default hashmap has poor performance, in most cases ahash should be used instead
+# The default Mutex and RwLock has comparitively poor performance, in most cases parking_lot should be used instead
+disallowed-types = ["std::collections::HashMap", "std::collections::HashSet", "std::sync::Mutex", "std::sync::RwLock"]
