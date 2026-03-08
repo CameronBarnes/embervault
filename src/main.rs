@@ -16,6 +16,8 @@ fn setup_logging() {
             ("iced_winit", LevelFilter::WARN),
             ("iced_wgpu", LevelFilter::WARN),
             ("calloop", LevelFilter::WARN),
+            #[cfg(debug_assertions)]
+            ("embervault", LevelFilter::TRACE)
         ]);
     tracing_subscriber::registry()
         .with(fmt::layer())

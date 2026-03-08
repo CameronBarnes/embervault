@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use strum::{Display, EnumIs, EnumIter, IntoStaticStr, VariantArray};
+use strum::{Display, EnumCount, EnumIs, EnumIter, IntoStaticStr, VariantArray};
 
 #[derive(
     Debug,
@@ -12,11 +12,12 @@ use strum::{Display, EnumIs, EnumIter, IntoStaticStr, VariantArray};
     VariantArray,
     EnumIs,
     EnumIter,
+    EnumCount,
     PartialEq,
     Eq,
     Hash,
 )]
-pub enum ContentType {
+pub enum Type {
     Image,
     Video,
     Gif,

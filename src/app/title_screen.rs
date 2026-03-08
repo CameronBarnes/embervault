@@ -1,10 +1,14 @@
 use iced::Length::{Fill, FillPortion};
-use iced::widget::{button, column, container, row, space, text, text_input};
+use iced::widget::{button, column, container, row, space, text, text_input, toggler};
 use iced::{Element, Task, Theme};
+
+use crate::types::search;
 
 #[derive(Default)]
 pub struct Title {
+    search_options: search::Options,
     search_text: String,
+    num_content: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -14,6 +18,9 @@ pub enum Message {
     IngestDir,
     Search,
     SearchContentChanged(String),
+    UpdateContentCount(usize),
+    ToggleContent(bool),
+    TogglePools(bool),
 }
 
 #[derive(Debug)]
@@ -37,6 +44,20 @@ impl Title {
                 self.search_text = text;
                 Action::None
             }
+            Message::UpdateContentCount(num) => {
+                self.num_content = num;
+                Action::None
+            }
+            Message::ToggleContent(enabled) => {
+                self.search_options
+                    .search_type_mut()
+                    .update_content(enabled);
+                Action::None
+            }
+            Message::TogglePools(enabled) => {
+                self.search_options.search_type_mut().update_pool(enabled);
+                Action::None
+            }
         }
     }
 
@@ -54,27 +75,59 @@ impl Title {
                 ]
                 .width(Fill)
             )
-            .style(|_| container::primary(&Theme::Light))
             .center_x(Fill),
             // Center Elements
             container(
                 column![
-                    text("EmberVault").size(40).center().width(Fill),
+                    // Title
+                    text("EmberVault").size(48).center().width(Fill),
                     space::vertical().height(50),
+                    // Center components
                     row![
                         space::horizontal().width(FillPortion(1)),
-                        row![
-                            text_input("Search with tags here...", &self.search_text)
-                                .on_input(Message::SearchContentChanged)
-                                .on_paste(Message::SearchContentChanged)
-                                .on_submit(Message::Search)
-                                .width(Fill),
-                            button("Search").on_press(Message::Search)
+                        // Using an extra column here to make sure everything inside is lined up
+                        // together and always the same width
+                        column![
+                            // Content count and Content/Pool search type
+                            row![
+                                "NumContent: ",
+                                "0", // TODO: Actually get the number here
+                                space::horizontal().width(Fill),
+                                toggler(self.search_options.search_type().content())
+                                    .label("Content")
+                                    .on_toggle(Message::ToggleContent),
+                                space::horizontal().width(10),
+                                toggler(self.search_options.search_type().pool())
+                                    .label("Pools")
+                                    .on_toggle(Message::TogglePools)
+                            ],
+                            space::vertical().height(5),
+                            // Search bar
+                            row![
+                                text_input("Search with tags here...", &self.search_text)
+                                    .on_input(Message::SearchContentChanged)
+                                    .on_paste(Message::SearchContentChanged)
+                                    .on_submit_maybe(
+                                        self.search_options
+                                            .search_type()
+                                            .is_some()
+                                            .then_some(Message::Search)
+                                    )
+                                    .width(Fill),
+                                button("Search").on_press_maybe(
+                                    self.search_options
+                                        .search_type()
+                                        .is_some()
+                                        .then_some(Message::Search)
+                                )
+                            ],
+                            space::vertical().height(5),
+                            // TODO: Content types to search for, and maybe search ordering
+                            "CenterB"
                         ]
                         .width(FillPortion(3)),
                         space::horizontal().width(FillPortion(1))
                     ],
-                    "CenterB"
                 ]
                 .spacing(5)
             )
