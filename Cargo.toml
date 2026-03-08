@@ -22,7 +22,7 @@ panic = 'abort'
 strip = "symbols"
 
 [dependencies]
-iced = { version = "0.14", features = ["wgpu", "tokio", "lazy"] }
+iced = { version = "0.14", features = ["wgpu", "tokio"] }
 
 itertools = "0.14"
 tracing = "0.1.44"
