@@ -3,6 +3,7 @@ mod gallery_screen;
 mod ingest_screen;
 mod tag_screen;
 mod title_screen;
+mod components;
 
 use iced::{Element, Task, Theme};
 
@@ -21,7 +22,7 @@ impl Default for App {
     fn default() -> Self {
         Self {
             screen: Screen::default(),
-            theme: Theme::GruvboxDark,
+            theme: Theme::Ferra,
         }
     }
 }
@@ -31,7 +32,7 @@ enum Screen {
     Tags(Tags),
     Gallery(Gallery),
     Ingest(Ingest),
-    Display(Display)
+    Display(Display),
 }
 
 impl Default for Screen {
@@ -46,11 +47,12 @@ pub enum Message {
     Tags(tag_screen::Message),
     Gallery(gallery_screen::Message),
     Ingest(ingest_screen::Message),
-    Display(display_screen::Message)
+    Display(display_screen::Message),
 }
 
 pub fn run() -> iced::Result {
     iced::application(App::default, update, view)
+        .title("EmberVault")
         .theme(theme)
         .run()
 }
@@ -72,7 +74,7 @@ fn update(state: &mut App, message: Message) -> Task<Message> {
             } else {
                 Task::none()
             }
-        },
+        }
         Message::Tags(_) => todo!(),
         Message::Gallery(_) => todo!(),
         Message::Ingest(_) => todo!(),

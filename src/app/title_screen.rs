@@ -1,5 +1,5 @@
-use iced::Length::Fill;
-use iced::widget::{button, column, container, row, space, text_input};
+use iced::Length::{Fill, FillPortion};
+use iced::widget::{button, column, container, row, space, text, text_input};
 use iced::{Element, Task, Theme};
 
 #[derive(Default)]
@@ -57,15 +57,27 @@ impl Title {
             .style(|_| container::primary(&Theme::Light))
             .center_x(Fill),
             // Center Elements
-            container(column![
-                "CenterT",
-                text_input("Search with tags here...", &self.search_text)
-                    .on_input(Message::SearchContentChanged)
-                    .on_paste(Message::SearchContentChanged)
-                    .on_submit(Message::Search),
-                "CenterB"
-            ])
-            .style(|_| container::primary(&Theme::SolarizedLight))
+            container(
+                column![
+                    text("EmberVault").size(40).center().width(Fill),
+                    space::vertical().height(50),
+                    row![
+                        space::horizontal().width(FillPortion(1)),
+                        row![
+                            text_input("Search with tags here...", &self.search_text)
+                                .on_input(Message::SearchContentChanged)
+                                .on_paste(Message::SearchContentChanged)
+                                .on_submit(Message::Search)
+                                .width(Fill),
+                            button("Search").on_press(Message::Search)
+                        ]
+                        .width(FillPortion(3)),
+                        space::horizontal().width(FillPortion(1))
+                    ],
+                    "CenterB"
+                ]
+                .spacing(5)
+            )
             .center(Fill),
             // Footer
             container(row!["BottomL", "BottomC", "BottomR"])

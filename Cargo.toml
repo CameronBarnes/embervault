@@ -28,20 +28,20 @@ itertools = "0.14"
 tracing = "0.1.44"
 tracing-subscriber = "0.3"
 
+serde = { version = "1.0", features = ["derive"] }
+
 # Error handling
 anyhow = "1.0"
 thiserror = "2.0" # This should be used with custom error types any time the error needs to contain data that we want to use
+strum = { version = "0.28.0", features = ["derive"] }
 
 # Above this is stuff that's almost always going to be wanted, bellow is more situational
-#human-panic = "2.0" # Optional, but recommended when sharing with end users
+human-panic = "2.0" # Optional, but recommended when sharing with end users
 #clap = { version = "4.5", features = ["derive"] }
-#enum-iterator = "2.1"
-# Recommended features include display, from, is_variant, into, deref, and dref_mut
-#derive_more = { version = "1.0", features = ["display"] }
 
 # Enable one of the following if this program uses hashmaps
 #rustc-hash = "2.0" # Poor quality but very high integer performance
-#ahash = "0.8" # Should be used most of the time instead of the default HashMap implementation
+ahash = "0.8" # Should be used most of the time instead of the default HashMap implementation
 
 #Enable if this program uses Mutex
 #parking_lot = "0.12"

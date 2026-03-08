@@ -1,10 +1,12 @@
 mod app;
+mod types;
 
 use anyhow::Result;
 use tracing::info;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::filter::Targets;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt};
+use human_panic::setup_panic;
 
 fn setup_logging() {
     let filter = Targets::new()
@@ -23,6 +25,7 @@ fn setup_logging() {
 
 #[allow(clippy::unnecessary_wraps)]
 fn main() -> Result<()> {
+    setup_panic!();
     setup_logging();
 
     info!("Hello, Mom!");
