@@ -1,9 +1,9 @@
+mod components;
 mod display_screen;
 mod gallery_screen;
 mod ingest_screen;
 mod tag_screen;
 mod title_screen;
-mod components;
 
 use iced::{Element, Task, Theme};
 

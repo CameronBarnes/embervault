@@ -28,8 +28,20 @@ impl Options {
         self.allowed_content_types.push(content_type);
     }
 
+    pub fn set_content_type_status(&mut self, content_type: content::Type, allowed: bool) {
+        if allowed {
+            self.allow_content_type(content_type);
+        } else {
+            self.forbid_content_type(content_type);
+        }
+    }
+
     pub fn get_allowed_content_types(&self) -> &[content::Type] {
         &self.allowed_content_types
+    }
+
+    pub const fn has_any_allowed_content_types(&self) -> bool {
+        !self.allowed_content_types.is_empty()
     }
 
     pub fn get_sort_order(&self) -> &[SortOrderType] {

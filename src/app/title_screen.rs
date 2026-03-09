@@ -1,10 +1,13 @@
+use std::time::Duration;
+
 use iced::Length::{Fill, FillPortion};
 use iced::widget::{
-    button, checkbox, column, container, row, space, span, text, text_input, tooltip,
+    button, checkbox, column, container, lazy, row, space, text, text_input, tooltip,
 };
 use iced::{Element, Padding, Task, Theme};
+use strum::VariantArray;
 
-use crate::types::search;
+use crate::types::{content, search};
 
 #[derive(Default)]
 pub struct Title {
@@ -22,6 +25,8 @@ pub enum Message {
     SearchContentChanged(String),
     ToggleContent(bool),
     TogglePools(bool),
+    TogglePrivate(bool),
+    ToggleContentType(content::Type, bool),
 }
 
 #[derive(Debug)]
@@ -71,6 +76,15 @@ impl Title {
                 self.search_options.search_type_mut().update_pool(enabled);
                 Action::None
             }
+            Message::TogglePrivate(private) => {
+                self.search_options.set_allow_private(private);
+                Action::None
+            }
+            Message::ToggleContentType(content_type, enabled) => {
+                self.search_options
+                    .set_content_type_status(content_type, enabled);
+                Action::None
+            }
         }
     }
 
@@ -115,23 +129,27 @@ fn header<'a>() -> Element<'a, Message> {
     .into()
 }
 
-fn center_block<'a>(title: &Title) -> Element<'a, Message> {
+fn center_block(title: &Title) -> Element<'_, Message> {
     row![
         space::horizontal().width(FillPortion(1)),
         // Using an extra column here to make sure everything is centered horizontally
         column![
             // Content count and Content/Pool search type
-            content_count_and_search_type(title.num_content, *title.search_options.search_type()),
-            space::vertical().height(5),
+            container(content_count_and_search_type(
+                title.num_content,
+                *title.search_options.search_type()
+            ))
+            .padding(Padding::ZERO.horizontal(5)),
             // Search bar
             container(search_bar(
                 &title.search_text,
-                title.search_options.search_type().is_some()
+                title.search_options.search_type().is_some(),
+                title.search_options.has_any_allowed_content_types()
             )),
-            space::vertical().height(5),
-            // TODO: Content types to search for, and maybe search ordering
-            "CenterB"
+            container(filter_private_and_content_type(&title.search_options))
+                .padding(Padding::ZERO.horizontal(5))
         ]
+        .spacing(15)
         .width(FillPortion(3)),
         space::horizontal().width(FillPortion(1))
     ]
@@ -143,21 +161,37 @@ fn content_count_and_search_type<'a>(
     search_type: search::Type,
 ) -> Element<'a, Message> {
     row![
-        "NumContent: ",
-        text(num_content.to_string()),
+        row!["NumContent: ", text(num_content.to_string())],
         space::horizontal().width(Fill),
-        checkbox(search_type.content())
-            .label("Content")
-            .on_toggle(Message::ToggleContent),
+        tooltip(
+            checkbox(search_type.content())
+                .label("Content")
+                .on_toggle(Message::ToggleContent),
+            "Should Content (Image, Video, GIFs, etc) show up in search results",
+            tooltip::Position::Top
+        )
+        .delay(Duration::from_secs(1))
+        .style(container::rounded_box),
         space::horizontal().width(10),
-        checkbox(search_type.pool())
-            .label("Pools")
-            .on_toggle(Message::TogglePools)
+        tooltip(
+            checkbox(search_type.pool())
+                .label("Pools")
+                .on_toggle(Message::TogglePools),
+            "Should collections of content(Playlists, etc) show up in search results",
+            tooltip::Position::Top
+        )
+        .delay(Duration::from_secs(1))
+        .style(container::rounded_box)
     ]
     .into()
 }
 
-fn search_bar<'a>(text: &str, allowed_search: bool) -> Element<'a, Message> {
+fn search_bar<'a>(
+    text: &str,
+    allowed_search_content_pools: bool,
+    allowed_search_content_types: bool,
+) -> Element<'a, Message> {
+    let allowed_search = allowed_search_content_pools && allowed_search_content_types;
     let bar = row![
         text_input("Search with tags here...", text)
             .on_input(Message::SearchContentChanged)
@@ -166,17 +200,56 @@ fn search_bar<'a>(text: &str, allowed_search: bool) -> Element<'a, Message> {
             .width(Fill),
         button("Search").on_press_maybe(allowed_search.then_some(Message::Search))
     ];
-    if allowed_search {
+    if allowed_search_content_pools && allowed_search_content_types {
         bar.into()
     } else {
+        let text = match (allowed_search_content_pools, allowed_search_content_types) {
+            (true, true) => {
+                unreachable!("Verified that we proceed above if both checks are allowed")
+            }
+            (true, false) => "Select a Content Type (Image, Video, GIF, etc) before you can search",
+            (false, true) => "Select Content, Pools, or both to search.",
+            (false, false) => {
+                "You must select Content or Pools to determine the kind of search, and a Content Type such as Image, Video, Gif, etc to search for"
+            }
+        };
+        tooltip(bar, text, tooltip::Position::FollowCursor)
+            .style(container::rounded_box)
+            .into()
+    }
+}
+
+// TODO: maybe add search ordering
+fn filter_private_and_content_type(search_options: &search::Options) -> Element<'_, Message> {
+    row![
         tooltip(
-            bar,
-            "Select Content, Pools, or both to search.",
-            tooltip::Position::FollowCursor,
+            checkbox(search_options.allow_private())
+                .label("Search Private")
+                .on_toggle(Message::TogglePrivate),
+            "Should Content marked as private show up in search results",
+            tooltip::Position::Top
         )
         .style(container::rounded_box)
-        .into()
+        .delay(Duration::from_secs(1)),
+        space::horizontal().width(Fill),
+        lazy(
+            search_options.get_allowed_content_types(),
+            |allowed_content_types| content_type_toggles(allowed_content_types)
+        )
+    ]
+    .into()
+}
+
+fn content_type_toggles<'a>(allowed_content_types: &[content::Type]) -> Element<'a, Message> {
+    let mut row = row![];
+    for item in content::Type::VARIANTS {
+        row = row.push(
+            checkbox(allowed_content_types.contains(item))
+                .label(item.to_string())
+                .on_toggle(|enabled| Message::ToggleContentType(*item, enabled)),
+        );
     }
+    row.spacing(10).into()
 }
 
 fn footer<'a>() -> Element<'a, Message> {

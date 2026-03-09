@@ -2,11 +2,11 @@ mod app;
 mod types;
 
 use anyhow::Result;
+use human_panic::setup_panic;
 use tracing::info;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::filter::Targets;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt};
-use human_panic::setup_panic;
 
 fn setup_logging() {
     let filter = Targets::new()
@@ -17,7 +17,7 @@ fn setup_logging() {
             ("iced_wgpu", LevelFilter::WARN),
             ("calloop", LevelFilter::WARN),
             #[cfg(debug_assertions)]
-            ("embervault", LevelFilter::TRACE)
+            ("embervault", LevelFilter::TRACE),
         ]);
     tracing_subscriber::registry()
         .with(fmt::layer())
