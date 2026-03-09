@@ -69,7 +69,7 @@ fn update(state: &mut App, message: Message) -> Task<Message> {
                     title_screen::Action::Tags => todo!(),
                     title_screen::Action::Ingest => todo!(),
                     title_screen::Action::IngestDir => todo!(),
-                    title_screen::Action::Search(_) => todo!(),
+                    title_screen::Action::Search(_, _) => todo!(),
                 }
             } else {
                 Task::none()

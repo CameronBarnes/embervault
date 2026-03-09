@@ -1,10 +1,11 @@
 use std::time::Duration;
 
-use iced::Length::{Fill, FillPortion};
+use iced::Length::{Fill, FillPortion, Shrink};
 use iced::widget::{
-    button, checkbox, column, container, lazy, row, space, text, text_input, tooltip,
+    Column, button, checkbox, column, container, lazy, row, rule, space, text, text_input, toggler,
+    tooltip,
 };
-use iced::{Element, Padding, Task, Theme};
+use iced::{Alignment, Element, Padding, Task};
 use strum::VariantArray;
 
 use crate::types::{content, search};
@@ -14,6 +15,7 @@ pub struct Title {
     search_options: search::Options,
     search_text: String,
     num_content: usize,
+    show_search_ordering: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -27,6 +29,9 @@ pub enum Message {
     TogglePools(bool),
     TogglePrivate(bool),
     ToggleContentType(content::Type, bool),
+    ToggleSearchOrder(bool),
+    Drop(iced::Point, iced::Rectangle),
+    HandleZones(Vec<(iced::advanced::widget::Id, iced::Rectangle)>),
 }
 
 #[derive(Debug)]
@@ -36,7 +41,7 @@ pub enum Action {
     Tags,
     Ingest,
     IngestDir,
-    Search(String),
+    Search(search::Options, String),
 }
 
 impl Title {
@@ -45,6 +50,7 @@ impl Title {
             search_options: search::Options::default(),
             search_text: String::default(),
             num_content,
+            show_search_ordering: false,
         }
     }
 
@@ -53,6 +59,7 @@ impl Title {
             search_text: String::default(),
             search_options,
             num_content,
+            show_search_ordering: false,
         }
     }
 
@@ -61,7 +68,9 @@ impl Title {
             Message::Tags => Action::Tags,
             Message::Ingest => Action::Ingest,
             Message::IngestDir => Action::IngestDir,
-            Message::Search => Action::Search(self.search_text.clone()),
+            Message::Search => {
+                Action::Search(self.search_options.clone(), self.search_text.clone())
+            }
             Message::SearchContentChanged(text) => {
                 self.search_text = text;
                 Action::None
@@ -85,6 +94,12 @@ impl Title {
                     .set_content_type_status(content_type, enabled);
                 Action::None
             }
+            Message::ToggleSearchOrder(enabled) => {
+                self.show_search_ordering = enabled;
+                Action::None
+            }
+            Message::Drop(point, rectangle) => todo!(),
+            Message::HandleZones(items) => todo!(),
         }
     }
 
@@ -117,15 +132,18 @@ impl Title {
 }
 
 fn header<'a>() -> Element<'a, Message> {
-    row![
-        button("Tags").on_press(Message::Tags),
-        space::horizontal(),
-        "TopC",
-        space::horizontal(),
-        button("Ingest").on_press(Message::Ingest),
-        button("Ingest Dir").on_press(Message::IngestDir),
+    column![
+        row![
+            button("Tags").on_press(Message::Tags),
+            space::horizontal(),
+            "TopC",
+            space::horizontal(),
+            button("Ingest").on_press(Message::Ingest),
+            button("Ingest Dir").on_press(Message::IngestDir),
+        ]
+        .width(Fill),
+        rule::horizontal(2)
     ]
-    .width(Fill)
     .into()
 }
 
@@ -147,7 +165,12 @@ fn center_block(title: &Title) -> Element<'_, Message> {
                 title.search_options.has_any_allowed_content_types()
             )),
             container(filter_private_and_content_type(&title.search_options))
-                .padding(Padding::ZERO.horizontal(5))
+                .padding(Padding::ZERO.horizontal(5)),
+            space::vertical().height(30),
+            container(search_ordering(
+                &title.search_options.get_sort_order(),
+                title.show_search_ordering
+            ))
         ]
         .spacing(15)
         .width(FillPortion(3)),
@@ -167,7 +190,7 @@ fn content_count_and_search_type<'a>(
             checkbox(search_type.content())
                 .label("Content")
                 .on_toggle(Message::ToggleContent),
-            "Should Content (Image, Video, GIFs, etc) show up in search results",
+            "Should Content (Image, Video, GIFs, etc) show up in results",
             tooltip::Position::Top
         )
         .delay(Duration::from_secs(1))
@@ -177,7 +200,7 @@ fn content_count_and_search_type<'a>(
             checkbox(search_type.pool())
                 .label("Pools")
                 .on_toggle(Message::TogglePools),
-            "Should collections of content(Playlists, etc) show up in search results",
+            "Should collections of content(Playlists, etc) show up in results",
             tooltip::Position::Top
         )
         .delay(Duration::from_secs(1))
@@ -226,7 +249,7 @@ fn filter_private_and_content_type(search_options: &search::Options) -> Element<
             checkbox(search_options.allow_private())
                 .label("Search Private")
                 .on_toggle(Message::TogglePrivate),
-            "Should Content marked as private show up in search results",
+            "Should Content marked as private show up in results",
             tooltip::Position::Top
         )
         .style(container::rounded_box)
@@ -252,8 +275,84 @@ fn content_type_toggles<'a>(allowed_content_types: &[content::Type]) -> Element<
     row.spacing(10).into()
 }
 
-fn footer<'a>() -> Element<'a, Message> {
-    container(row!["BottomL", "BottomC", "BottomR"])
-        .style(|_| container::primary(&Theme::GruvboxLight))
+fn search_ordering<'a>(
+    sort_order: &[search::SortOrderType],
+    show_search_ordering: bool,
+) -> Element<'a, Message> {
+    let row = row![
+        rule::horizontal(2),
+        toggler(show_search_ordering)
+            .label("Search Order")
+            .on_toggle(Message::ToggleSearchOrder),
+        rule::horizontal(2)
+    ]
+    .align_y(Alignment::Center)
+    .spacing(5)
+    .width(Fill);
+    if show_search_ordering {
+        column![
+            row,
+            space::vertical().height(5),
+            row![
+                text("Enabled").center().width(Fill),
+                text("Disabled").center().width(Fill)
+            ],
+            search_ordering_content(sort_order)
+        ]
+        .spacing(10)
         .into()
+    } else {
+        row.into()
+    }
+}
+
+fn search_ordering_content<'a>(sort_order: &[search::SortOrderType]) -> Element<'a, Message> {
+    let mut enabled = Vec::<Element<'a, Message>>::new();
+    for item in sort_order {
+        enabled.push(
+            container(text!("{}. {item}", enabled.len()))
+                .style(container::bordered_box)
+                .padding(5)
+                .width(Fill)
+                .into(),
+        );
+    }
+    let mut disabled = Vec::<Element<'a, Message>>::new();
+    for item in search::SortOrderType::VARIANTS {
+        if sort_order.contains(item) {
+            continue;
+        }
+        disabled.push(
+            container(text(item.to_string()))
+                .style(container::bordered_box)
+                .padding(5)
+                .width(Fill)
+                .into(),
+        );
+    }
+    row![
+        container(
+            Column::with_children(enabled)
+                .padding(10)
+                .spacing(10)
+                .width(150)
+        )
+        .style(container::bordered_box)
+        .width(Fill)
+        .height(FillPortion(1)),
+        container(
+            Column::with_children(disabled)
+                .padding(10)
+                .spacing(10)
+                .width(100)
+        )
+        .style(container::bordered_box)
+        .width(Fill)
+        .height(FillPortion(1))
+    ]
+    .into()
+}
+
+fn footer<'a>() -> Element<'a, Message> {
+    column![rule::horizontal(2), row!["BottomL", "BottomC", "BottomR"]].into()
 }

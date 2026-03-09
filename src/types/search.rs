@@ -210,6 +210,7 @@ impl Type {
 pub enum SortOrderType {
     Views,
     ViewTime,
+    DateAdded,
     Favorite,
     Private,
     ContentType,
