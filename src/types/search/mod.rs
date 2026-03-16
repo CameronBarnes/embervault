@@ -1,19 +1,31 @@
+pub mod order;
+
 use serde::{Deserialize, Serialize};
 use strum::{Display, EnumCount, EnumIs, EnumIter, IntoStaticStr, VariantArray};
 
+use self::order::SearchOrder;
+
 use super::content;
+
+// TODO: Refactor sort order info into separate Struct
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Options {
     allowed_content_types: Vec<content::Type>,
-    sort_order: Vec<SortOrderType>,
+    search_order: SearchOrder,
     search_type: r#Type,
-    favorites_first: bool,
     allow_private: bool,
-    sort_backwards: bool,
 }
 
 impl Options {
+    pub const fn get_search_order(&self) -> &SearchOrder {
+        &self.search_order
+    }
+
+    pub const fn get_search_order_mut(&mut self) -> &mut SearchOrder {
+        &mut self.search_order
+    }
+
     pub fn forbid_content_type(&mut self, content_type: content::Type) {
         self.allowed_content_types
             .retain(|item| *item != content_type);
@@ -44,36 +56,12 @@ impl Options {
         !self.allowed_content_types.is_empty()
     }
 
-    pub fn get_sort_order(&self) -> &[SortOrderType] {
-        &self.sort_order
-    }
-
-    pub const fn get_sort_order_mut(&mut self) -> &mut Vec<SortOrderType> {
-        &mut self.sort_order
-    }
-
-    pub const fn favorites_first(&self) -> bool {
-        self.favorites_first
-    }
-
     pub const fn allow_private(&self) -> bool {
         self.allow_private
     }
 
-    pub const fn set_favorites_first(&mut self, enabled: bool) {
-        self.favorites_first = enabled;
-    }
-
     pub const fn set_allow_private(&mut self, enabled: bool) {
         self.allow_private = enabled;
-    }
-
-    pub const fn should_sort_backwards(&self) -> bool {
-        self.sort_backwards
-    }
-
-    pub const fn set_sort_backwards(&mut self, enabled: bool) {
-        self.sort_backwards = enabled;
     }
 
     #[must_use]
@@ -93,19 +81,11 @@ impl Options {
 
 impl Default for Options {
     fn default() -> Self {
-        let mut sort_order = Vec::<SortOrderType>::with_capacity(SortOrderType::COUNT);
-        sort_order.extend_from_slice(&[
-            SortOrderType::Views,
-            SortOrderType::ViewTime,
-            SortOrderType::Favorite,
-        ]);
         Self {
             allowed_content_types: content::Type::VARIANTS.into(),
-            sort_order,
+            search_order: SearchOrder::default(),
             search_type: Type::default(),
-            favorites_first: false,
             allow_private: false,
-            sort_backwards: false,
         }
     }
 }
@@ -189,30 +169,4 @@ impl Type {
     pub const fn is_some(self) -> bool {
         !self.is_none()
     }
-}
-
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    Serialize,
-    Deserialize,
-    IntoStaticStr,
-    Display,
-    VariantArray,
-    EnumIs,
-    EnumIter,
-    EnumCount,
-    PartialEq,
-    Eq,
-    Hash,
-)]
-pub enum SortOrderType {
-    Views,
-    ViewTime,
-    DateAdded,
-    Favorite,
-    Private,
-    ContentType,
-    Random,
 }

@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use iced::Length::{Fill, FillPortion, Shrink};
+use iced::Length::{Fill, FillPortion};
 use iced::widget::{
     Column, button, checkbox, column, container, lazy, row, rule, space, text, text_input, toggler,
     tooltip,
@@ -8,6 +8,7 @@ use iced::widget::{
 use iced::{Alignment, Element, Padding, Task};
 use strum::VariantArray;
 
+use crate::types::search::order::{SearchOrder, SortOrderType};
 use crate::types::{content, search};
 
 #[derive(Default)]
@@ -136,8 +137,6 @@ fn header<'a>() -> Element<'a, Message> {
         row![
             button("Tags").on_press(Message::Tags),
             space::horizontal(),
-            "TopC",
-            space::horizontal(),
             button("Ingest").on_press(Message::Ingest),
             button("Ingest Dir").on_press(Message::IngestDir),
         ]
@@ -168,7 +167,7 @@ fn center_block(title: &Title) -> Element<'_, Message> {
                 .padding(Padding::ZERO.horizontal(5)),
             space::vertical().height(30),
             container(search_ordering(
-                &title.search_options.get_sort_order(),
+                title.search_options.get_search_order(),
                 title.show_search_ordering
             ))
         ]
@@ -223,23 +222,19 @@ fn search_bar<'a>(
             .width(Fill),
         button("Search").on_press_maybe(allowed_search.then_some(Message::Search))
     ];
-    if allowed_search_content_pools && allowed_search_content_types {
-        bar.into()
-    } else {
-        let text = match (allowed_search_content_pools, allowed_search_content_types) {
-            (true, true) => {
-                unreachable!("Verified that we proceed above if both checks are allowed")
-            }
-            (true, false) => "Select a Content Type (Image, Video, GIF, etc) before you can search",
-            (false, true) => "Select Content, Pools, or both to search.",
-            (false, false) => {
-                "You must select Content or Pools to determine the kind of search, and a Content Type such as Image, Video, Gif, etc to search for"
-            }
-        };
-        tooltip(bar, text, tooltip::Position::FollowCursor)
-            .style(container::rounded_box)
-            .into()
-    }
+    let text = match (allowed_search_content_pools, allowed_search_content_types) {
+        (true, true) => {
+            return bar.into();
+        }
+        (true, false) => "Select a Content Type (Image, Video, GIF, etc) before you can search",
+        (false, true) => "Select Content, Pools, or both to search.",
+        (false, false) => {
+            "You must select Content or Pools to determine the kind of search, and a Content Type such as Image, Video, Gif, etc to search for"
+        }
+    };
+    tooltip(bar, text, tooltip::Position::FollowCursor)
+        .style(container::rounded_box)
+        .into()
 }
 
 // TODO: maybe add search ordering
@@ -276,7 +271,7 @@ fn content_type_toggles<'a>(allowed_content_types: &[content::Type]) -> Element<
 }
 
 fn search_ordering<'a>(
-    sort_order: &[search::SortOrderType],
+    search_order: &SearchOrder,
     show_search_ordering: bool,
 ) -> Element<'a, Message> {
     let row = row![
@@ -297,7 +292,7 @@ fn search_ordering<'a>(
                 text("Enabled").center().width(Fill),
                 text("Disabled").center().width(Fill)
             ],
-            search_ordering_content(sort_order)
+            search_ordering_content(search_order.get_sort_order())
         ]
         .spacing(10)
         .into()
@@ -306,7 +301,7 @@ fn search_ordering<'a>(
     }
 }
 
-fn search_ordering_content<'a>(sort_order: &[search::SortOrderType]) -> Element<'a, Message> {
+fn search_ordering_content<'a>(sort_order: &[SortOrderType]) -> Element<'a, Message> {
     let mut enabled = Vec::<Element<'a, Message>>::new();
     for item in sort_order {
         enabled.push(
@@ -318,7 +313,7 @@ fn search_ordering_content<'a>(sort_order: &[search::SortOrderType]) -> Element<
         );
     }
     let mut disabled = Vec::<Element<'a, Message>>::new();
-    for item in search::SortOrderType::VARIANTS {
+    for item in SortOrderType::VARIANTS {
         if sort_order.contains(item) {
             continue;
         }
