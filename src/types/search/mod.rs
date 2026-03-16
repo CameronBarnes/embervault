@@ -3,8 +3,6 @@ pub mod order;
 use serde::{Deserialize, Serialize};
 use strum::{Display, EnumCount, EnumIs, EnumIter, IntoStaticStr, VariantArray};
 
-use self::order::SearchOrder;
-
 use super::content;
 
 // TODO: Refactor sort order info into separate Struct
@@ -12,20 +10,11 @@ use super::content;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Options {
     allowed_content_types: Vec<content::Type>,
-    search_order: SearchOrder,
     search_type: r#Type,
     allow_private: bool,
 }
 
 impl Options {
-    pub const fn get_search_order(&self) -> &SearchOrder {
-        &self.search_order
-    }
-
-    pub const fn get_search_order_mut(&mut self) -> &mut SearchOrder {
-        &mut self.search_order
-    }
-
     pub fn forbid_content_type(&mut self, content_type: content::Type) {
         self.allowed_content_types
             .retain(|item| *item != content_type);
@@ -83,7 +72,6 @@ impl Default for Options {
     fn default() -> Self {
         Self {
             allowed_content_types: content::Type::VARIANTS.into(),
-            search_order: SearchOrder::default(),
             search_type: Type::default(),
             allow_private: false,
         }
