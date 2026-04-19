@@ -5,7 +5,9 @@ mod ingest_screen;
 mod tag_screen;
 mod title_screen;
 
-use iced::{Element, Task, Theme};
+use iced::event::{self, Event};
+use iced::widget::operation;
+use iced::{Element, Subscription, Task, Theme, keyboard, keyboard::key};
 
 use self::display_screen::Display;
 use self::gallery_screen::Gallery;
@@ -48,13 +50,22 @@ pub enum Message {
     Gallery(gallery_screen::Message),
     Ingest(ingest_screen::Message),
     Display(display_screen::Message),
+    Event(Event),
 }
 
 pub fn run() -> iced::Result {
     iced::application(App::default, update, view)
         .title("EmberVault")
         .theme(theme)
+        .subscription(App::subscription)
         .run()
+}
+
+impl App {
+    #[allow(clippy::unused_self)]
+    fn subscription(&self) -> Subscription<Message> {
+        event::listen().map(Message::Event)
+    }
 }
 
 fn update(state: &mut App, message: Message) -> Task<Message> {
@@ -79,6 +90,20 @@ fn update(state: &mut App, message: Message) -> Task<Message> {
         Message::Gallery(_) => todo!(),
         Message::Ingest(_) => todo!(),
         Message::Display(_) => todo!(),
+        Message::Event(event) => match event {
+            Event::Keyboard(keyboard::Event::KeyPressed {
+                key: keyboard::Key::Named(key::Named::Tab),
+                modifiers,
+                ..
+            }) => {
+                if modifiers.shift() {
+                    operation::focus_previous()
+                } else {
+                    operation::focus_next()
+                }
+            }
+            _ => Task::none(),
+        },
     }
 }
 
