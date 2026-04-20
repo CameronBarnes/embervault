@@ -1,4 +1,5 @@
 mod app;
+mod db;
 mod types;
 
 use anyhow::Result;
@@ -7,6 +8,8 @@ use tracing::info;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::filter::Targets;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt};
+
+use self::db::DBHandler;
 
 fn setup_logging() {
     let filter = Targets::new()
@@ -31,7 +34,18 @@ fn main() -> Result<()> {
     setup_logging();
 
     info!("Hello, Mom!");
+
+    info!("Starting up DB");
+    let mut db_handler = DBHandler::new()?;
+    db_handler.initialize()?;
+
+    let _db_conn = db_handler.get_diesel_connection()?;
+
+    info!("Launching GUI");
     app::run()?;
+
+    info!("Shutting down DB");
+    db_handler.stop()?;
 
     Ok(())
 }
