@@ -1,6 +1,58 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    content (id) {
+        id -> Int4,
+        dhash -> Int8,
+        phash -> Int8,
+        title -> Text,
+        description -> Text,
+        favorite -> Bool,
+        private -> Bool,
+        restricted_tag_count -> Int4,
+        restricted -> Bool,
+        duration_viewed_ms -> Int8,
+        views -> Int4,
+        points -> Int4,
+        score -> Int4,
+        has_manually_added_tags -> Bool,
+        file_path -> Text,
+        media_type -> Text,
+        width -> Nullable<Int4>,
+        height -> Nullable<Int4>,
+        duration_ms -> Nullable<Int4>,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    content_file_hash (id) {
+        id -> Int4,
+        content_id -> Int4,
+        hash_type -> Text,
+        hash_value -> Bytea,
+    }
+}
+
+diesel::table! {
+    content_frame_hash (id) {
+        id -> Int4,
+        content_id -> Int4,
+        frame_index -> Int4,
+        dhash -> Int8,
+        phash -> Int8,
+    }
+}
+
+diesel::table! {
+    content_tag (content_id, tag_id) {
+        content_id -> Int4,
+        tag_id -> Int4,
+    }
+}
+
+diesel::table! {
     tag_aliases (id) {
         id -> Int4,
         name_id -> Int4,
@@ -63,6 +115,10 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(content_file_hash -> content (content_id));
+diesel::joinable!(content_frame_hash -> content (content_id));
+diesel::joinable!(content_tag -> content (content_id));
+diesel::joinable!(content_tag -> tags (tag_id));
 diesel::joinable!(tag_aliases -> tag_names (name_id));
 diesel::joinable!(tag_aliases -> tags (tag_id));
 diesel::joinable!(tag_group_aliases -> tag_groups (group_id));
@@ -74,6 +130,10 @@ diesel::joinable!(tags -> tag_categories (category_id));
 diesel::joinable!(tags -> tag_names (name_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    content,
+    content_file_hash,
+    content_frame_hash,
+    content_tag,
     tag_aliases,
     tag_categories,
     tag_group_aliases,

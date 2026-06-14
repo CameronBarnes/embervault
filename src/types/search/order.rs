@@ -77,12 +77,14 @@ impl SearchOrder {
     Hash,
 )]
 pub enum SortOrderType {
+    Points,
+    Score,
     Views,
     ViewTime,
     DateAdded,
     Favorite,
     Private,
     ContentType,
-    HasTags,
+    HasAddedTags,
     Random,
 }

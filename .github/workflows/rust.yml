@@ -8,6 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUSTFLAGS: "" # The CI runner doesnt have access to the mold linker so we'll include this here
 
 jobs:
   build:

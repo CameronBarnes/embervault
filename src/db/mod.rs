@@ -2,6 +2,7 @@ use anyhow::{Result, anyhow};
 use diesel::{Connection, PgConnection};
 use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use postgresql_embedded::blocking::PostgreSQL;
+use postgresql_embedded::{Settings, SettingsBuilder, VersionReq};
 use tracing::{debug, info};
 
 pub mod schema;
@@ -25,8 +26,12 @@ pub struct DBHandler {
 
 impl DBHandler {
     pub fn new() -> Result<Self> {
+        let pg_settings = SettingsBuilder::new()
+            .version(VersionReq::parse("=18")?)
+            .temporary(false)
+            .build();
         Ok(Self {
-            db: start_db()?,
+            db: start_db(pg_settings)?,
             state: DBState::Started,
             connection: None,
         })
@@ -126,9 +131,11 @@ impl DBHandler {
     }
 }
 
-fn start_db() -> Result<PostgreSQL> {
-    let mut pg = PostgreSQL::default();
+fn start_db(settings: Settings) -> Result<PostgreSQL> {
+    info!("Installing PostgreSQL {}", settings.version.to_string());
+    let mut pg = PostgreSQL::new(settings);
     pg.setup()?;
+    info!("Starting up PostgreSQL");
     pg.start()?;
     Ok(pg)
 }
