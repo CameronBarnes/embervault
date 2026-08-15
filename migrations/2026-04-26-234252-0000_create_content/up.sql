@@ -2,7 +2,7 @@
 CREATE TABLE content (
 	id SERIAL PRIMARY KEY,
 
-	-- primary perceptual hashes, for images or prepresentative frame for gif or video
+	-- primary perceptual hashes, for images or representative frame for gif or video
 	dhash BIGINT NOT NULL CHECK (dhash >= 0),
 	phash BIGINT NOT NULL CHECK (phash >= 0),
 
@@ -23,16 +23,13 @@ CREATE TABLE content (
 	has_manually_added_tags BOOLEAN NOT NULL DEFAULT FALSE,
 
 	-- backend metadata
-	file_path TEXT NOT NULL,
 	media_type TEXT NOT NULL,
 	width INT CHECK (width > 0),
 	height INT CHECK (height > 0),
 	duration_ms INT CHECK (duration_ms >= 0),
 
 	created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-	updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-
-	UNIQUE (file_path)
+	updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE INDEX content_dhash_idx ON content (dhash);
