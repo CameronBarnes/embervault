@@ -6,12 +6,34 @@ pub mod sql_types {
     pub struct FileAvailability;
 
     #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "import_outcome"))]
+    pub struct ImportOutcome;
+
+    #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "import_scan_status"))]
+    pub struct ImportScanStatus;
+
+    #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "ingest_mode"))]
+    pub struct IngestMode;
+
+    #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "path_format"))]
     pub struct PathFormat;
 
     #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "storage_type"))]
     pub struct StorageType;
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::IngestMode;
+
+    automatic_imports (id) {
+        id -> Int4,
+        ingest_mode -> IngestMode,
+    }
 }
 
 diesel::table! {
@@ -76,6 +98,50 @@ diesel::table! {
     content_tag (content_id, tag_id) {
         content_id -> Int4,
         tag_id -> Int4,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::ImportOutcome;
+
+    import_entries (source_id, relative_path) {
+        source_id -> Int4,
+        relative_path -> Bytea,
+        file_size -> Int8,
+        file_modified_at -> Timestamptz,
+        file_identity -> Nullable<Bytea>,
+        change_token -> Nullable<Bytea>,
+        hash_type -> Text,
+        hash_value -> Bytea,
+        last_seen_scan_id -> Int8,
+        outcome -> ImportOutcome,
+        admitted_content_id -> Nullable<Int4>,
+        duplicate_content_id -> Nullable<Int4>,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::ImportScanStatus;
+
+    import_scans (id) {
+        id -> Int8,
+        source_id -> Int4,
+        started_at -> Timestamptz,
+        finished_at -> Nullable<Timestamptz>,
+        status -> ImportScanStatus,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::PathFormat;
+
+    import_sources (id) {
+        id -> Int4,
+        path_format -> PathFormat,
+        path -> Bytea,
     }
 }
 
@@ -155,12 +221,15 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(automatic_imports -> import_sources (id));
 diesel::joinable!(content_file_hash -> content (content_id));
 diesel::joinable!(content_files -> content (content_id));
 diesel::joinable!(content_files -> storage_roots (storage_root_id));
 diesel::joinable!(content_frame_hash -> content (content_id));
 diesel::joinable!(content_tag -> content (content_id));
 diesel::joinable!(content_tag -> tags (tag_id));
+diesel::joinable!(import_entries -> import_sources (source_id));
+diesel::joinable!(import_scans -> import_sources (source_id));
 diesel::joinable!(tag_aliases -> tag_names (name_id));
 diesel::joinable!(tag_aliases -> tags (tag_id));
 diesel::joinable!(tag_group_aliases -> tag_groups (group_id));
@@ -172,11 +241,15 @@ diesel::joinable!(tags -> tag_categories (category_id));
 diesel::joinable!(tags -> tag_names (name_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    automatic_imports,
     content,
     content_file_hash,
     content_files,
     content_frame_hash,
     content_tag,
+    import_entries,
+    import_scans,
+    import_sources,
     storage_roots,
     tag_aliases,
     tag_categories,
