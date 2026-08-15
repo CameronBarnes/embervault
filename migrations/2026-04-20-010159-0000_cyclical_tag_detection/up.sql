@@ -13,7 +13,7 @@ BEGIN
 			SELECT NEW.parent_id
 			UNION
 			SELECT tp.parent_id
-			FROM tag_partents tp
+			FROM tag_parents tp
 			JOIN ancestors a ON tp.child_id = a.id
 		)
 		SELECT 1
