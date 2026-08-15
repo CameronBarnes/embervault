@@ -88,7 +88,7 @@ diesel::table! {
     tag_groups (id) {
         id -> Int4,
         name_id -> Int4,
-        descripton -> Nullable<Text>,
+        description -> Nullable<Text>,
     }
 }
 

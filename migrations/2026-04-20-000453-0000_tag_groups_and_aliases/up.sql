@@ -14,7 +14,7 @@ CREATE TABLE tag_groups (
 	id SERIAL PRIMARY KEY,
 	name_id INTEGER NOT NULL UNIQUE
 		REFERENCES tag_names(id) ON DELETE CASCADE,
-	descripton TEXT
+	description TEXT
 );
 
 CREATE TABLE tag_group_members (
