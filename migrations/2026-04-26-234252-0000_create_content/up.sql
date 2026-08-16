@@ -3,8 +3,8 @@ CREATE TABLE content (
 	id SERIAL PRIMARY KEY,
 
 	-- primary perceptual hashes, for images or representative frame for gif or video
-	dhash BIGINT NOT NULL CHECK (dhash >= 0),
-	phash BIGINT NOT NULL CHECK (phash >= 0),
+	dhash BIGINT NOT NULL,
+	phash BIGINT NOT NULL,
 
 	-- user metadata
 	title TEXT NOT NULL DEFAULT '',
@@ -59,8 +59,8 @@ CREATE TABLE content_frame_hash (
 
 	frame_index INT NOT NULL,
 
-	dhash BIGINT NOT NULL CHECK (dhash >= 0),
-	phash BIGINT NOT NULL CHECK (phash >= 0),
+	dhash BIGINT NOT NULL,
+	phash BIGINT NOT NULL,
 
 	UNIQUE (content_id, frame_index)
 );

@@ -42,6 +42,7 @@ CREATE TYPE import_outcome AS ENUM (
 );
 
 CREATE TABLE import_entries (
+	id BIGSERIAL PRIMARY KEY,
 	source_id INT NOT NULL REFERENCES import_sources(id) ON DELETE CASCADE,
 	relative_path BYTEA NOT NULL,
 
@@ -63,7 +64,7 @@ CREATE TABLE import_entries (
 	admitted_content_id INT REFERENCES content(id) ON DELETE SET NULL,
 	duplicate_content_id INT REFERENCES content(id) ON DELETE SET NULL,
 
-	PRIMARY KEY (source_id, relative_path)
+	UNIQUE (source_id, relative_path)
 );
 
 CREATE INDEX import_entries_unique_hash ON import_entries (hash_type, hash_value);

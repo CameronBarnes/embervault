@@ -105,7 +105,8 @@ diesel::table! {
     use diesel::sql_types::*;
     use super::sql_types::ImportOutcome;
 
-    import_entries (source_id, relative_path) {
+    import_entries (id) {
+        id -> Int8,
         source_id -> Int4,
         relative_path -> Bytea,
         file_size -> Int8,
