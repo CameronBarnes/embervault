@@ -1,5 +1,5 @@
 DROP INDEX IF EXISTS import_scans_source_started;
-DROP INDEX IF EXISTS import_entries_unique_hash;
+DROP INDEX IF EXISTS import_entries_hash;
 
 DROP TABLE IF EXISTS import_entries;
 DROP TYPE import_outcome;

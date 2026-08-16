@@ -39,10 +39,10 @@ fn main() -> Result<()> {
     let mut db_handler = DBHandler::new()?;
     db_handler.initialize()?;
 
-    let _db_conn = db_handler.get_diesel_connection()?;
+    let db_pool = db_handler.pool()?;
 
     info!("Launching GUI");
-    app::run()?;
+    app::run(db_pool)?;
 
     info!("Shutting down DB");
     db_handler.stop()?;

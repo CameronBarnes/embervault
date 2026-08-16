@@ -5,9 +5,12 @@ mod ingest_screen;
 mod tag_screen;
 mod title_screen;
 
+use diesel::PgConnection;
 use iced::event::{self, Event};
 use iced::widget::operation;
 use iced::{Element, Subscription, Task, Theme, keyboard, keyboard::key};
+
+use crate::db::DbPool;
 
 use self::display_screen::Display;
 use self::gallery_screen::Gallery;
@@ -18,13 +21,15 @@ use self::title_screen::Title;
 pub struct App {
     screen: Screen,
     theme: Theme,
+    db_pool: DbPool,
 }
 
-impl Default for App {
-    fn default() -> Self {
+impl App {
+    pub fn new(db_pool: DbPool) -> Self {
         Self {
             screen: Screen::default(),
             theme: Theme::Ferra,
+            db_pool
         }
     }
 }
@@ -53,8 +58,8 @@ pub enum Message {
     Event(Event),
 }
 
-pub fn run() -> iced::Result {
-    iced::application(App::default, update, view)
+pub fn run(db_pool: DbPool) -> iced::Result {
+    iced::application(move || App::new(db_pool.clone()), update, view)
         .title("EmberVault")
         .theme(theme)
         .subscription(App::subscription)

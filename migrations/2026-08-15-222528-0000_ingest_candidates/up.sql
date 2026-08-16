@@ -1,4 +1,4 @@
--- Ingest Canidates
+-- Ingest Candidates
 CREATE TABLE ingest_candidates (
 	id SERIAL PRIMARY KEY,
 	import_entry BIGINT NOT NULL UNIQUE REFERENCES import_entries(id) ON DELETE CASCADE,

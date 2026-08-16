@@ -67,5 +67,5 @@ CREATE TABLE import_entries (
 	UNIQUE (source_id, relative_path)
 );
 
-CREATE INDEX import_entries_unique_hash ON import_entries (hash_type, hash_value);
+CREATE INDEX import_entries_hash ON import_entries (hash_type, hash_value);
 CREATE INDEX import_scans_source_started ON import_scans (source_id, started_at DESC);
