@@ -33,7 +33,7 @@ pub enum Action {
 }
 
 impl Title {
-    pub fn new_with_num_content(num_content: usize) -> Self {
+    pub fn new_with_num_content(num_content: Option<i64>) -> Self {
         let mut search_state = search_widget::State::default();
         search_state.num_content = num_content;
         Self {
@@ -42,9 +42,9 @@ impl Title {
         }
     }
 
-    pub fn new(search_options: search::Options, num_content: usize) -> Self {
+    pub fn new(search_options: search::Options, num_content: i64) -> Self {
         Self {
-            search_widget: search_widget::State::new(search_options, num_content),
+            search_widget: search_widget::State::new(search_options, Some(num_content)),
             search_order_widget: search_ordering_widget::State::default(),
         }
     }

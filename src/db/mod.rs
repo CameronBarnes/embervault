@@ -7,6 +7,7 @@ use postgresql_embedded::{Settings, SettingsBuilder, VersionReq};
 use tracing::{debug, info};
 
 pub mod schema;
+pub mod models;
 
 const DB_NAME: &str = "embervault";
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");

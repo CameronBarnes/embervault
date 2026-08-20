@@ -28,7 +28,6 @@ fn setup_logging() {
         .init();
 }
 
-#[allow(clippy::unnecessary_wraps)]
 fn main() -> Result<()> {
     setup_panic!();
     setup_logging();

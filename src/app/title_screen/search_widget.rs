@@ -13,11 +13,11 @@ use crate::types::{content, search};
 pub struct State {
     search_options: search::Options,
     text: String,
-    pub(super) num_content: usize,
+    pub(super) num_content: Option<i64>,
 }
 
 impl State {
-    pub const fn new(search_options: search::Options, num_content: usize) -> Self {
+    pub const fn new(search_options: search::Options, num_content: Option<i64>) -> Self {
         Self {
             search_options,
             text: String::new(),
@@ -78,11 +78,12 @@ impl State {
 }
 
 fn content_count_and_search_type<'a>(
-    num_content: usize,
+    num_content: Option<i64>,
     search_type: search::Type,
 ) -> Element<'a, Message> {
+    let num_content = num_content.map_or_else(|| String::from("Loading..."), |num| num.to_string());
     row![
-        row!["NumContent: ", text(num_content.to_string())],
+        row!["NumContent: ", text(num_content)],
         space::horizontal().width(Fill),
         tooltip(
             checkbox(search_type.content())
